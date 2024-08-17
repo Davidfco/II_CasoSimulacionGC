@@ -869,7 +869,7 @@ GameObject:
   m_Component:
   - component: {fileID: 489691363}
   - component: {fileID: 489691364}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: PipeBackground2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1075,7 +1075,7 @@ Transform:
   m_GameObject: {fileID: 519420028}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.29929516, y: 0.00048470497, z: -8.5}
+  m_LocalPosition: {x: -0.29909775, y: -0.0014836788, z: -8.5}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1577,7 +1577,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1065947976}
   - component: {fileID: 1065947977}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: PipeBackground3
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1661,7 +1661,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1093519399}
   - component: {fileID: 1093519400}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: PipeBackground1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4797,7 +4797,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1401130693}
-  m_Layer: 0
+  - component: {fileID: 1401130694}
+  m_Layer: 7
   m_Name: Background
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -4823,6 +4824,18 @@ Transform:
   - {fileID: 2020432438}
   m_Father: {fileID: 477792223}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!210 &1401130694
+SortingGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1401130692}
+  m_Enabled: 1
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_SortAtRoot: 0
 --- !u!1 &1467062071
 GameObject:
   m_ObjectHideFlags: 0
@@ -5311,6 +5324,7 @@ GameObject:
   - component: {fileID: 1807604971}
   - component: {fileID: 1807604970}
   - component: {fileID: 1807604969}
+  - component: {fileID: 1807604972}
   m_Layer: 6
   m_Name: Player
   m_TagString: Untagged
@@ -5445,6 +5459,18 @@ Rigidbody2D:
   m_SleepingMode: 1
   m_CollisionDetection: 1
   m_Constraints: 4
+--- !u!210 &1807604972
+SortingGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1807604967}
+  m_Enabled: 1
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 1
+  m_SortAtRoot: 0
 --- !u!1 &1812502300
 GameObject:
   m_ObjectHideFlags: 0
@@ -5747,7 +5773,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2020432438}
   - component: {fileID: 2020432439}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: PipeBackground4
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -5920,5 +5946,5 @@ SceneRoots:
   - {fileID: 619394802}
   - {fileID: 619166940}
   - {fileID: 1807604968}
-  - {fileID: 477792223}
   - {fileID: 404914913}
+  - {fileID: 477792223}

@@ -209,14 +209,14 @@ public class EnemyController2D : MonoBehaviour
         health -= damage;
         if (health <= 0)
         {
-            Die(); // Trigger death sequence
+            Die();
         }
     }
 
     public void Die()
     {
-        animator.SetTrigger("isDead"); // Trigger death animation
-        rb.velocity = Vector2.zero; // Stop movement
-        Destroy(gameObject, 1f); // Delay destruction to allow animation to play
+        animator.SetTrigger("isDead"); 
+        rb.velocity = Vector2.zero;
+        Destroy(gameObject, 1f); 
     }
 }

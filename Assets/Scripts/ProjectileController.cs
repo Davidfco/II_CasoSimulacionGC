@@ -19,16 +19,29 @@ public class ProjectileController : MonoBehaviour
         _rigidbody = GetComponent<Rigidbody2D>();    
     }
 
-    private void OnEnable()
-    {
-        _rigidbody.velocity = Vector2.right * speed * Time.deltaTime;    
-    }
-
-    public void Go(float damage, bool isPercentage)
+    public void Go(float damage, bool isPercentage, Vector2 direction)
     {
         _damage = damage;
         _isPercentage = isPercentage; 
         gameObject.SetActive(true);
+
+        _rigidbody.velocity = direction * speed * Time.deltaTime;
     }
-    
+
+    private void OnCollisionEnter2D(Collision2D collision)
+    {
+        if (collision.gameObject.CompareTag("Ground"))
+        {
+            Destroy(gameObject);
+        }
+        if (collision.gameObject.CompareTag("Zombie"))
+        {
+            EnemyController2D Zombie = collision.gameObject.GetComponent<EnemyController2D>();
+            if (Zombie != null)
+            {
+                Zombie.TakeDamage(_damage);
+            }
+            Destroy(gameObject);
+        }
+    }
 }

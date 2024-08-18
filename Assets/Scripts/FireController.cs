@@ -23,7 +23,7 @@ public class FireController : MonoBehaviour
         {
             if (_chargeTime >= chargeTimeout)
             {
-                _character.Super();
+                _character.Shot();
             }
             _isCharging = false;
             _chargeTime = 0.0F;

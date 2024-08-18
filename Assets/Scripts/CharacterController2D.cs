@@ -7,8 +7,8 @@ public class CharacterController2D : MonoBehaviour
     private int ANIMATION_SPEED;
     private int ANIMATION_FORCE;
     private int ANIMATION_FALL;
-    private int ANIMATION_PUNCH;
-    private int ANIMATION_SUPER;
+    private int ANIMATION_MELEE;
+    private int ANIMATION_SHOT;
     private int ANIMATION_DIE;
 
     [SerializeField]
@@ -40,10 +40,10 @@ public class CharacterController2D : MonoBehaviour
 
     [Header("Attack")]
     [SerializeField]
-    private Transform punchPoint;
+    private Transform meleePoint;
 
     [SerializeField]
-    private float punchRadius;
+    private float meleeRadius;
 
     [SerializeField]
     private LayerMask attackMask;
@@ -70,6 +70,7 @@ public class CharacterController2D : MonoBehaviour
     private bool _isGrounded;
     private bool _isJumpPressed;
     private bool _isJumping;
+    private float killDamage = 100.0F;
 
     private void Awake()
     {
@@ -81,8 +82,8 @@ public class CharacterController2D : MonoBehaviour
         ANIMATION_SPEED = Animator.StringToHash("speed");
         ANIMATION_FORCE = Animator.StringToHash("force");
         ANIMATION_FALL = Animator.StringToHash("fall");
-        ANIMATION_PUNCH = Animator.StringToHash("punch");
-        ANIMATION_SUPER = Animator.StringToHash("super");
+        ANIMATION_MELEE = Animator.StringToHash("melee");
+        ANIMATION_SHOT = Animator.StringToHash("shot");
         ANIMATION_DIE = Animator.StringToHash("die");
 
         currentHealth = maxHealth; // Initialize current health
@@ -220,55 +221,56 @@ public class CharacterController2D : MonoBehaviour
         _isGrounded = true;
     }
 
-  
 
-    public void Punch()
+
+    public void Melee()
     {
-        _animator.SetTrigger(ANIMATION_PUNCH);
+        _animator.SetTrigger(ANIMATION_MELEE);
     }
 
-    public void Punch(float damage, bool isPercentage)
+    public void Melee(float damage, bool isPercentage)
     {
-        Collider2D[] colliders = Physics2D.OverlapCircleAll(punchPoint.position, punchRadius, attackMask);
+        Collider2D[] colliders = Physics2D.OverlapCircleAll(meleePoint.position, meleeRadius, attackMask);
 
         foreach (Collider2D collider in colliders)
         {
-            DamageableController controller = collider.GetComponent<DamageableController>();
-            if (controller == null)
+            EnemyController2D enemyController = collider.GetComponent<EnemyController2D>();
+            if (enemyController != null)
             {
-                continue;
+                enemyController.TakeDamage(damage);  // Aplica el daño al enemigo
             }
-
-            controller.TakeDamage(damage, isPercentage);
         }
     }
 
-    public void Super()
+    public void Shot()
     {
-        _animator.SetTrigger(ANIMATION_SUPER);
+        _animator.SetTrigger(ANIMATION_SHOT);
     }
 
-    public void Super(float damage, bool isPercentage)
+    public void Shot(float damage, bool isPercentage)
     {
+        Vector2 direction = isFacingRight ? Vector2.right : Vector2.left;
+
         GameObject projectile = Instantiate(projectilePrefab, projectilePoint.position, transform.rotation);
         ProjectileController controller = projectile.GetComponent<ProjectileController>();
-        controller.Go(damage, isPercentage);
+
+        controller.Go(damage, isPercentage, direction);
         Destroy(projectile, projectileLifeTime);
     }
 
     public void Die()
     {
-     StartCoroutine(DieCoroutine());
-      
+        StartCoroutine(DieCoroutine());
+
     }
 
-   private IEnumerator DieCoroutine()
-     {
+    private IEnumerator DieCoroutine()
+    {
         _animator.SetTrigger("isDead"); // Trigger death animation
         _rigidbody.velocity = Vector2.zero; // Stop movement
         yield return new WaitForSeconds(dieDelay);
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
-  
+
     }
 
     // Method to handle taking damage
@@ -278,8 +280,29 @@ public class CharacterController2D : MonoBehaviour
         Debug.Log($"Current Health: {currentHealth}"); // Log the current health value
         if (currentHealth <= 0)
         {
-           
+
             Die(); // Trigger death sequence
+        }
+    }
+
+    private void OnCollisionEnter2D(Collision2D collision)
+    {
+        if (collision.gameObject.CompareTag("Zombie"))
+        {
+            Collider2D[] colliders = Physics2D.OverlapBoxAll(groundCheck.position, groundCheckSize, 0f);
+
+            foreach (Collider2D collider in colliders)
+            {
+                if (collider.gameObject == collision.gameObject)
+                {
+                    EnemyController2D enemyController = collider.GetComponent<EnemyController2D>();
+                    if (enemyController != null)
+                    {
+                        enemyController.TakeDamage(killDamage);
+                    }
+                    break;
+                }
+            }
         }
     }
 }

@@ -32,7 +32,7 @@ public class MeleeController : MonoBehaviour
         {
             if (Input.GetButtonUp("Fire1"))
             {
-                _character.Punch();
+                _character.Melee();
             }
         }
     }

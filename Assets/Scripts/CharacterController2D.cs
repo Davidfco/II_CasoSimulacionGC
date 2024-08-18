@@ -1,4 +1,3 @@
-using System;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -12,61 +11,65 @@ public class CharacterController2D : MonoBehaviour
     private int ANIMATION_SUPER;
     private int ANIMATION_DIE;
 
+    [SerializeField]
+    private float maxHealth; // Maximum health of the player
+    [SerializeField]
+    private float currentHealth; // Current health of the player
+
     [Header("Movement")]
     [SerializeField]
-    float walkSpeed;
-
-    [SerializeField] 
-    float jumpForce;
+    private float walkSpeed;
 
     [SerializeField]
-    float gravityMultiplier;
+    private float jumpForce;
 
     [SerializeField]
-    Transform groundCheck;
+    private float gravityMultiplier;
 
     [SerializeField]
-    Vector2 groundCheckSize;
+    private Transform groundCheck;
 
     [SerializeField]
-    LayerMask groundMask;
+    private Vector2 groundCheckSize;
 
     [SerializeField]
-    bool isFacingRight;
+    private LayerMask groundMask;
+
+    [SerializeField]
+    private bool isFacingRight;
 
     [Header("Attack")]
     [SerializeField]
-    Transform punchPoint;
+    private Transform punchPoint;
 
     [SerializeField]
-    float punchRadious;
+    private float punchRadius;
 
     [SerializeField]
-    LayerMask attackMask;
+    private LayerMask attackMask;
 
     [SerializeField]
-    float dieDelay;
+    private float dieDelay;
 
     [SerializeField]
-    GameObject projectilePrefab;
+    private GameObject projectilePrefab;
 
     [SerializeField]
-    Transform projectilePoint;
+    private Transform projectilePoint;
 
     [SerializeField]
-    float projectileLifeTime;
+    private float projectileLifeTime;
 
+    private Rigidbody2D _rigidbody;
+    private Animator _animator;
 
-    Rigidbody2D _rigidbody;
-    Animator _animator;
+    private float _inputX;
+    private float _gravityY;
+    private float _velocityY;
 
-    float _inputX;
-    float _gravityY;
-    float _velocityY;
-
-    bool _isGrounded;
-    bool _isJumpPressed;
-    bool _isJumping;
+    private bool _isGrounded;
+    private bool _isJumpPressed;
+    private bool _isJumping;
 
     private void Awake()
     {
@@ -81,6 +84,8 @@ public class CharacterController2D : MonoBehaviour
         ANIMATION_PUNCH = Animator.StringToHash("punch");
         ANIMATION_SUPER = Animator.StringToHash("super");
         ANIMATION_DIE = Animator.StringToHash("die");
+
+        currentHealth = maxHealth; // Initialize current health
     }
 
     private void Start()
@@ -91,7 +96,7 @@ public class CharacterController2D : MonoBehaviour
     private void Update()
     {
         HandleGravity();
-        HandleInputMove();   
+        HandleInputMove();
     }
 
     private void FixedUpdate()
@@ -109,6 +114,7 @@ public class CharacterController2D : MonoBehaviour
             StartCoroutine(WaitForGroundedCoroutine());
         }
     }
+
     private void HandleGravity()
     {
         if (_isGrounded)
@@ -156,7 +162,7 @@ public class CharacterController2D : MonoBehaviour
         }
         else if (_isGrounded)
         {
-            if ( _velocityY >= 0.0F)
+            if (_velocityY >= 0.0F)
             {
                 _velocityY = -1.0F;
             }
@@ -169,7 +175,6 @@ public class CharacterController2D : MonoBehaviour
         }
     }
 
-   
     private void HandleMove()
     {
         float speed = _inputX != 0.0F ? 1.0F : 0.0F;
@@ -180,8 +185,8 @@ public class CharacterController2D : MonoBehaviour
             _animator.SetFloat(ANIMATION_SPEED, speed);
         }
 
-        Vector2 velocity = new Vector2 (_inputX, 0.0F) * walkSpeed * Time.fixedDeltaTime;
-        velocity.y = _velocityY; 
+        Vector2 velocity = new Vector2(_inputX, 0.0F) * walkSpeed * Time.fixedDeltaTime;
+        velocity.y = _velocityY;
 
         _rigidbody.velocity = velocity;
     }
@@ -199,12 +204,11 @@ public class CharacterController2D : MonoBehaviour
             isFacingRight = facingRight;
             transform.Rotate(0.0F, 180.0F, 0.0F);
         }
-            
     }
 
     private bool IsGrounded()
     {
-        Collider2D collider2D = 
+        Collider2D collider2D =
             Physics2D.OverlapBox(groundCheck.position, groundCheckSize, 0.0F, groundMask);
         return collider2D != null;
     }
@@ -216,6 +220,8 @@ public class CharacterController2D : MonoBehaviour
         _isGrounded = true;
     }
 
+  
+
     public void Punch()
     {
         _animator.SetTrigger(ANIMATION_PUNCH);
@@ -223,7 +229,7 @@ public class CharacterController2D : MonoBehaviour
 
     public void Punch(float damage, bool isPercentage)
     {
-        Collider2D[] colliders = Physics2D.OverlapCircleAll(punchPoint.position, punchRadious, attackMask);
+        Collider2D[] colliders = Physics2D.OverlapCircleAll(punchPoint.position, punchRadius, attackMask);
 
         foreach (Collider2D collider in colliders)
         {
@@ -252,14 +258,28 @@ public class CharacterController2D : MonoBehaviour
 
     public void Die()
     {
-        StartCoroutine(DieCoroutine());
+     StartCoroutine(DieCoroutine());
+      
     }
 
-    private IEnumerator DieCoroutine()
-    {
-        _animator.SetTrigger(ANIMATION_DIE);
+   private IEnumerator DieCoroutine()
+     {
+        _animator.SetTrigger("isDead"); // Trigger death animation
+        _rigidbody.velocity = Vector2.zero; // Stop movement
         yield return new WaitForSeconds(dieDelay);
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+  
+    }
+
+    // Method to handle taking damage
+    public void TakeDamage(float damage)
+    {
+        currentHealth -= damage;
+        Debug.Log($"Current Health: {currentHealth}"); // Log the current health value
+        if (currentHealth <= 0)
+        {
+           
+            Die(); // Trigger death sequence
+        }
     }
 }
-

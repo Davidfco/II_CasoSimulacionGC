@@ -207,7 +207,7 @@ public class CharacterController2D : MonoBehaviour
         }
     }
 
-    private bool IsGrounded()
+    public bool IsGrounded()
     {
         Collider2D collider2D =
             Physics2D.OverlapBox(groundCheck.position, groundCheckSize, 0.0F, groundMask);

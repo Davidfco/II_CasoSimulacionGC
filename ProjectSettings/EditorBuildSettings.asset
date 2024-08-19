@@ -8,4 +8,16 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/Level-1.unity
     guid: 8c9cfa26abfee488c85f1582747f6a02
+  - enabled: 1
+    path: Assets/Scenes/Topdown.unity
+    guid: fe94499389814b34589320dda427f2fb
+  - enabled: 1
+    path: Assets/Scenes/BattleScene.unity
+    guid: e09a7fddb3c020d4190485196bd9864f
+  - enabled: 1
+    path: Assets/Scenes/VictoryScene.unity
+    guid: 66c71363920df244cbacbd3e47d15c3d
+  - enabled: 1
+    path: Assets/Scenes/DefeatScene.unity
+    guid: 0bace0211b7123e41b1d0daf6eed2e87
   m_configObjects: {}

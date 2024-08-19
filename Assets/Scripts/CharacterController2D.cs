@@ -10,63 +10,44 @@ public class CharacterController2D : MonoBehaviour
     private int ANIMATION_MELEE;
     private int ANIMATION_SHOT;
     private int ANIMATION_DIE;
+    private int ANIMATION_RELOAD;
 
-    [SerializeField]
-    private float maxHealth; // Maximum health of the player
-    [SerializeField]
-    private float currentHealth; // Current health of the player
+    [SerializeField] private HealthBar healthBar; // Reference to the health bar component
+
+    [SerializeField] private float maxHealth; // Maximum health of the player
+    [SerializeField] private float currentHealth; // Current health of the player
 
     [Header("Movement")]
-    [SerializeField]
-    private float walkSpeed;
-
-    [SerializeField]
-    private float jumpForce;
-
-    [SerializeField]
-    private float gravityMultiplier;
-
-    [SerializeField]
-    private Transform groundCheck;
-
-    [SerializeField]
-    private Vector2 groundCheckSize;
-
-    [SerializeField]
-    private LayerMask groundMask;
-
-    [SerializeField]
-    private bool isFacingRight;
+    [SerializeField] private float walkSpeed;
+    [SerializeField] private float jumpForce;
+    [SerializeField] private float gravityMultiplier;
+    [SerializeField] private Transform groundCheck;
+    [SerializeField] private Vector2 groundCheckSize;
+    [SerializeField] private LayerMask groundMask;
+    [SerializeField] private bool isFacingRight;
 
     [Header("Attack")]
-    [SerializeField]
-    private Transform meleePoint;
+    [SerializeField] private Transform meleePoint;
+    [SerializeField] private float meleeRadius;
+    [SerializeField] private LayerMask attackMask;
+    [SerializeField] private float dieDelay;
+    [SerializeField] private GameObject projectilePrefab;
+    [SerializeField] private Transform projectilePoint;
+    [SerializeField] private float projectileLifeTime;
 
-    [SerializeField]
-    private float meleeRadius;
+    // Ammunition Variables
+    [Header("Ammunition")]
+    [SerializeField] private int maxMunition = 10;  // Max capacity of munition
+    [SerializeField] private float reloadTime = 2f; // Time it takes to reload in seconds
+    [SerializeField] private int currentMunition;  // Current munition count
+   
 
-    [SerializeField]
-    private LayerMask attackMask;
-
-    [SerializeField]
-    private float dieDelay;
-
-    [SerializeField]
-    private GameObject projectilePrefab;
-
-    [SerializeField]
-    private Transform projectilePoint;
-
-    [SerializeField]
-    private float projectileLifeTime;
 
     private Rigidbody2D _rigidbody;
     private Animator _animator;
-
     private float _inputX;
     private float _gravityY;
     private float _velocityY;
-
     private bool _isGrounded;
     private bool _isJumpPressed;
     private bool _isJumping;
@@ -85,19 +66,29 @@ public class CharacterController2D : MonoBehaviour
         ANIMATION_MELEE = Animator.StringToHash("melee");
         ANIMATION_SHOT = Animator.StringToHash("shot");
         ANIMATION_DIE = Animator.StringToHash("die");
+        ANIMATION_RELOAD = Animator.StringToHash("reload"); // Initialize reload animation hash
 
         currentHealth = maxHealth; // Initialize current health
+        UpdateHealthBar();
+        currentMunition = maxMunition; // Initialize munition count
+
     }
 
     private void Start()
     {
+        healthBar = FindObjectOfType<HealthBar>(); // Ensure HealthBar is initialized
+       
+        UpdateHealthBar();
         HandleGrounded();
     }
 
     private void Update()
     {
+        healthBar = FindObjectOfType<HealthBar>(); // Ensure HealthBar is initialized
         HandleGravity();
         HandleInputMove();
+        UpdateHealthBar();
+        HandleInputReload();
     }
 
     private void FixedUpdate()
@@ -137,6 +128,27 @@ public class CharacterController2D : MonoBehaviour
     private void HandleInputMove()
     {
         _inputX = Input.GetAxisRaw("Horizontal");
+    }
+
+    private void HandleInputReload()
+    {
+        if (Input.GetKeyDown(KeyCode.R))
+        {
+            Debug.Log("Reloading...");
+            StartCoroutine(ReloadCoroutine());
+        }
+    }
+
+    private IEnumerator ReloadCoroutine()
+    {
+      
+        _animator.SetTrigger(ANIMATION_RELOAD); // Trigger the reload animation
+
+        yield return new WaitForSeconds(reloadTime); // Wait for reload time
+
+        currentMunition = maxMunition; // Refill ammunition
+  
+   
     }
 
     private void HandleJump()
@@ -221,8 +233,6 @@ public class CharacterController2D : MonoBehaviour
         _isGrounded = true;
     }
 
-
-
     public void Melee()
     {
         _animator.SetTrigger(ANIMATION_MELEE);
@@ -237,52 +247,96 @@ public class CharacterController2D : MonoBehaviour
             EnemyController2D enemyController = collider.GetComponent<EnemyController2D>();
             if (enemyController != null)
             {
-                enemyController.TakeDamage(damage);  // Aplica el daño al enemigo
+                enemyController.TakeDamage(damage);  // Apply damage to enemy
             }
         }
     }
 
     public void Shot()
     {
-        _animator.SetTrigger(ANIMATION_SHOT);
+        if (currentMunition > 0)  // Check if there is any ammo
+        {
+            _animator.SetTrigger(ANIMATION_SHOT);
+
+        }
+        else
+        {
+            Debug.Log("Out of ammunition!");
+
+        }
     }
 
     public void Shot(float damage, bool isPercentage)
     {
         Vector2 direction = isFacingRight ? Vector2.right : Vector2.left;
 
-        GameObject projectile = Instantiate(projectilePrefab, projectilePoint.position, transform.rotation);
-        ProjectileController controller = projectile.GetComponent<ProjectileController>();
+        if (currentMunition > 0)  // Check if there is any ammo
+        {
+            GameObject projectile = Instantiate(projectilePrefab, projectilePoint.position, Quaternion.identity);
+            ProjectileController controller = projectile.GetComponent<ProjectileController>();
 
-        controller.Go(damage, isPercentage, direction);
-        Destroy(projectile, projectileLifeTime);
+            controller.Go(damage, isPercentage, direction);
+            Destroy(projectile, projectileLifeTime);
+
+            currentMunition--;
+          
+        }
+        else
+        {
+            Debug.Log("Out of ammunition!");
+        }
     }
+
+
+
+ 
+
 
     public void Die()
     {
         StartCoroutine(DieCoroutine());
-
     }
 
     private IEnumerator DieCoroutine()
     {
+        // Explicitly set health to zero
+        currentHealth = 0;
+        UpdateHealthBar();  // Update the health bar to reflect zero health
         _animator.SetTrigger("isDead"); // Trigger death animation
         _rigidbody.velocity = Vector2.zero; // Stop movement
         yield return new WaitForSeconds(dieDelay);
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
-
     }
 
-    // Method to handle taking damage
+
     public void TakeDamage(float damage)
     {
         currentHealth -= damage;
-        Debug.Log($"Current Health: {currentHealth}"); // Log the current health value
+        currentHealth = Mathf.Clamp(currentHealth, 0, maxHealth); // Ensure health doesn't drop below 0
+        UpdateHealthBar(); // Update the health bar
+        Debug.Log($"Player Current Health: {currentHealth}"); // Log health via HealthBar
+
         if (currentHealth <= 0)
         {
-
-            Die(); // Trigger death sequence
+            Die();
         }
+    }
+
+    private void UpdateHealthBar()
+    {
+        if (healthBar != null)
+        {
+            healthBar.UpdateHealthBar(currentHealth, maxHealth); // Update health bar based on current health
+        }
+    }
+
+    public void Heal(float amount)
+    {
+        currentHealth += amount;
+        currentHealth = Mathf.Clamp(currentHealth, 0, maxHealth); // Ensure health doesn't exceed max
+
+        UpdateHealthBar(); // Update the health bar
+        Debug.Log($"Player Current Health: {currentHealth}"); // Log updated health
     }
 
     private void OnCollisionEnter2D(Collision2D collision)
@@ -295,12 +349,11 @@ public class CharacterController2D : MonoBehaviour
             {
                 if (collider.gameObject == collision.gameObject)
                 {
-                    EnemyController2D enemyController = collider.GetComponent<EnemyController2D>();
+                    EnemyController2D enemyController = collision.gameObject.GetComponent<EnemyController2D>();
                     if (enemyController != null)
                     {
-                        enemyController.TakeDamage(killDamage);
+                        enemyController.TakeDamage(killDamage); // Apply damage
                     }
-                    break;
                 }
             }
         }

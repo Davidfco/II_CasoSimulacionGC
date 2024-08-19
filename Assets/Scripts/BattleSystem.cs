@@ -103,13 +103,13 @@ public class BattleSystem : MonoBehaviour
 
     void EnemyTurn()
     {
-        int enemyAction = Random.Range(0, 2); 
+        int enemyAction = Random.Range(0, 3); 
 
-        if (enemyAction == 0)
+        if (enemyAction <= 1) 
         {
             EnemyAttack();
         }
-        else if (enemyAction == 1)
+        else if (enemyAction == 2) 
         {
             EnemyHeal();
         }

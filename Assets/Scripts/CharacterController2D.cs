@@ -1,4 +1,3 @@
-using System;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -8,65 +7,70 @@ public class CharacterController2D : MonoBehaviour
     private int ANIMATION_SPEED;
     private int ANIMATION_FORCE;
     private int ANIMATION_FALL;
-    private int ANIMATION_PUNCH;
-    private int ANIMATION_SUPER;
+    private int ANIMATION_MELEE;
+    private int ANIMATION_SHOT;
     private int ANIMATION_DIE;
+
+    [SerializeField]
+    private float maxHealth; // Maximum health of the player
+    [SerializeField]
+    private float currentHealth; // Current health of the player
 
     [Header("Movement")]
     [SerializeField]
-    float walkSpeed;
-
-    [SerializeField] 
-    float jumpForce;
+    private float walkSpeed;
 
     [SerializeField]
-    float gravityMultiplier;
+    private float jumpForce;
 
     [SerializeField]
-    Transform groundCheck;
+    private float gravityMultiplier;
 
     [SerializeField]
-    Vector2 groundCheckSize;
+    private Transform groundCheck;
 
     [SerializeField]
-    LayerMask groundMask;
+    private Vector2 groundCheckSize;
 
     [SerializeField]
-    bool isFacingRight;
+    private LayerMask groundMask;
+
+    [SerializeField]
+    private bool isFacingRight;
 
     [Header("Attack")]
     [SerializeField]
-    Transform punchPoint;
+    private Transform meleePoint;
 
     [SerializeField]
-    float punchRadious;
+    private float meleeRadius;
 
     [SerializeField]
-    LayerMask attackMask;
+    private LayerMask attackMask;
 
     [SerializeField]
-    float dieDelay;
+    private float dieDelay;
 
     [SerializeField]
-    GameObject projectilePrefab;
+    private GameObject projectilePrefab;
 
     [SerializeField]
-    Transform projectilePoint;
+    private Transform projectilePoint;
 
     [SerializeField]
-    float projectileLifeTime;
+    private float projectileLifeTime;
 
+    private Rigidbody2D _rigidbody;
+    private Animator _animator;
 
-    Rigidbody2D _rigidbody;
-    Animator _animator;
+    private float _inputX;
+    private float _gravityY;
+    private float _velocityY;
 
-    float _inputX;
-    float _gravityY;
-    float _velocityY;
-
-    bool _isGrounded;
-    bool _isJumpPressed;
-    bool _isJumping;
+    private bool _isGrounded;
+    private bool _isJumpPressed;
+    private bool _isJumping;
+    private float killDamage = 100.0F;
 
     private void Awake()
     {
@@ -78,9 +82,11 @@ public class CharacterController2D : MonoBehaviour
         ANIMATION_SPEED = Animator.StringToHash("speed");
         ANIMATION_FORCE = Animator.StringToHash("force");
         ANIMATION_FALL = Animator.StringToHash("fall");
-        ANIMATION_PUNCH = Animator.StringToHash("punch");
-        ANIMATION_SUPER = Animator.StringToHash("super");
+        ANIMATION_MELEE = Animator.StringToHash("melee");
+        ANIMATION_SHOT = Animator.StringToHash("shot");
         ANIMATION_DIE = Animator.StringToHash("die");
+
+        currentHealth = maxHealth; // Initialize current health
     }
 
     private void Start()
@@ -91,7 +97,7 @@ public class CharacterController2D : MonoBehaviour
     private void Update()
     {
         HandleGravity();
-        HandleInputMove();   
+        HandleInputMove();
     }
 
     private void FixedUpdate()
@@ -109,6 +115,7 @@ public class CharacterController2D : MonoBehaviour
             StartCoroutine(WaitForGroundedCoroutine());
         }
     }
+
     private void HandleGravity()
     {
         if (_isGrounded)
@@ -156,7 +163,7 @@ public class CharacterController2D : MonoBehaviour
         }
         else if (_isGrounded)
         {
-            if ( _velocityY >= 0.0F)
+            if (_velocityY >= 0.0F)
             {
                 _velocityY = -1.0F;
             }
@@ -169,7 +176,6 @@ public class CharacterController2D : MonoBehaviour
         }
     }
 
-   
     private void HandleMove()
     {
         float speed = _inputX != 0.0F ? 1.0F : 0.0F;
@@ -180,8 +186,8 @@ public class CharacterController2D : MonoBehaviour
             _animator.SetFloat(ANIMATION_SPEED, speed);
         }
 
-        Vector2 velocity = new Vector2 (_inputX, 0.0F) * walkSpeed * Time.fixedDeltaTime;
-        velocity.y = _velocityY; 
+        Vector2 velocity = new Vector2(_inputX, 0.0F) * walkSpeed * Time.fixedDeltaTime;
+        velocity.y = _velocityY;
 
         _rigidbody.velocity = velocity;
     }
@@ -199,12 +205,11 @@ public class CharacterController2D : MonoBehaviour
             isFacingRight = facingRight;
             transform.Rotate(0.0F, 180.0F, 0.0F);
         }
-            
     }
 
     private bool IsGrounded()
     {
-        Collider2D collider2D = 
+        Collider2D collider2D =
             Physics2D.OverlapBox(groundCheck.position, groundCheckSize, 0.0F, groundMask);
         return collider2D != null;
     }
@@ -216,50 +221,88 @@ public class CharacterController2D : MonoBehaviour
         _isGrounded = true;
     }
 
-    public void Punch()
+
+
+    public void Melee()
     {
-        _animator.SetTrigger(ANIMATION_PUNCH);
+        _animator.SetTrigger(ANIMATION_MELEE);
     }
 
-    public void Punch(float damage, bool isPercentage)
+    public void Melee(float damage, bool isPercentage)
     {
-        Collider2D[] colliders = Physics2D.OverlapCircleAll(punchPoint.position, punchRadious, attackMask);
+        Collider2D[] colliders = Physics2D.OverlapCircleAll(meleePoint.position, meleeRadius, attackMask);
 
         foreach (Collider2D collider in colliders)
         {
-            DamageableController controller = collider.GetComponent<DamageableController>();
-            if (controller == null)
+            EnemyController2D enemyController = collider.GetComponent<EnemyController2D>();
+            if (enemyController != null)
             {
-                continue;
+                enemyController.TakeDamage(damage);  // Aplica el da�o al enemigo
             }
-
-            controller.TakeDamage(damage, isPercentage);
         }
     }
 
-    public void Super()
+    public void Shot()
     {
-        _animator.SetTrigger(ANIMATION_SUPER);
+        _animator.SetTrigger(ANIMATION_SHOT);
     }
 
-    public void Super(float damage, bool isPercentage)
+    public void Shot(float damage, bool isPercentage)
     {
+        Vector2 direction = isFacingRight ? Vector2.right : Vector2.left;
+
         GameObject projectile = Instantiate(projectilePrefab, projectilePoint.position, transform.rotation);
         ProjectileController controller = projectile.GetComponent<ProjectileController>();
-        controller.Go(damage, isPercentage);
+
+        controller.Go(damage, isPercentage, direction);
         Destroy(projectile, projectileLifeTime);
     }
 
     public void Die()
     {
         StartCoroutine(DieCoroutine());
+
     }
 
     private IEnumerator DieCoroutine()
     {
-        _animator.SetTrigger(ANIMATION_DIE);
+        _animator.SetTrigger("isDead"); // Trigger death animation
+        _rigidbody.velocity = Vector2.zero; // Stop movement
         yield return new WaitForSeconds(dieDelay);
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+
+    }
+
+    // Method to handle taking damage
+    public void TakeDamage(float damage)
+    {
+        currentHealth -= damage;
+        Debug.Log($"Current Health: {currentHealth}"); // Log the current health value
+        if (currentHealth <= 0)
+        {
+
+            Die(); // Trigger death sequence
+        }
+    }
+
+    private void OnCollisionEnter2D(Collision2D collision)
+    {
+        if (collision.gameObject.CompareTag("Zombie"))
+        {
+            Collider2D[] colliders = Physics2D.OverlapBoxAll(groundCheck.position, groundCheckSize, 0f);
+
+            foreach (Collider2D collider in colliders)
+            {
+                if (collider.gameObject == collision.gameObject)
+                {
+                    EnemyController2D enemyController = collider.GetComponent<EnemyController2D>();
+                    if (enemyController != null)
+                    {
+                        enemyController.TakeDamage(killDamage);
+                    }
+                    break;
+                }
+            }
+        }
     }
 }
-

@@ -27,16 +27,16 @@ public class CharacterListener : MonoBehaviour
         return null;
     }
 
-    public void OnPunch()
+    public void OnMelee()
     {
-        AttackMode attackMode = GetAttackMode("OnPunch");
-        _character.Punch(attackMode.getDamage(), attackMode.getIsPercentage());
+        AttackMode attackMode = GetAttackMode("OnMelee");
+        _character.Melee(attackMode.getDamage(), attackMode.getIsPercentage());
     }
     
-    public void OnSuper()
+    public void OnShot()
     {
-        AttackMode attackMode = GetAttackMode("OnSuper");
-        _character.Super(attackMode.getDamage(), attackMode.getIsPercentage());
+        AttackMode attackMode = GetAttackMode("OnShot");
+        _character.Shot(attackMode.getDamage(), attackMode.getIsPercentage());
     }
 
 }
